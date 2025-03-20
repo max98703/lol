@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "764159896157",
+    "project_id": "nativelogin-d6fac",
+    "storage_bucket": "nativelogin-d6fac.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:764159896157:android:e49c322a19e4fed821fbb4",
+        "android_client_info": {
+          "package_name": "com.coffee_shop_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "764159896157-22pmba9r5su37jfqeps7e6n7cs7h38ju.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.coffee_shop_app",
+            "certificate_hash": "504f34420ac2f4ce9012d6c77f0cfc2602095c63"
+          }
+        },
+        {
+          "client_id": "764159896157-50nu1umedvkccgubppeqonj4slu3rd3f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDih1ExtUvZ2CFX9bimvqa5HLaCjJ3L_dI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "764159896157-50nu1umedvkccgubppeqonj4slu3rd3f.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

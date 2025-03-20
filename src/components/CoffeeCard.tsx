@@ -19,13 +19,12 @@ import {
 import CustomIcon from './CustomIcon';
 import BGIcon from './BGIcon';
 
-const CARD_WIDTH = Dimensions.get('window').width * 0.32;
+const CARD_WIDTH = Dimensions.get('window').width * 0.34;
 
 interface CoffeeCardProps {
   id: string;
   index: number;
   type: string;
-  roasted: string;
   imagelink_square: ImageProps;
   name: string;
   special_ingredient: string;
@@ -38,7 +37,6 @@ const CoffeeCard: React.FC<CoffeeCardProps> = ({
   id,
   index,
   type,
-  roasted,
   imagelink_square,
   name,
   special_ingredient,
@@ -46,16 +44,17 @@ const CoffeeCard: React.FC<CoffeeCardProps> = ({
   price,
   buttonPressHandler,
 }) => {
+  const formattedImageName = imagelink_square.replace(/_/g, '%');
   return (
     <LinearGradient
       start={{x: 0, y: 0}}
       end={{x: 1, y: 1}}
       style={styles.CardLinearGradientContainer}
-      colors={[COLORS.primaryGreyHex, COLORS.primaryBlackHex]}>
+      colors={['#fff', '#fff']}>
       <ImageBackground
-        source={imagelink_square}
+        source={{ uri: `https://fzliiwigydluhgbuvnmr.supabase.co/storage/v1/object/public/productimages//${formattedImageName}` }}
         style={styles.CardImageBG}
-        resizeMode="cover">
+        resizeMode="contain">
         <View style={styles.CardRatingContainer}>
           <CustomIcon
             name={'star'}
@@ -69,7 +68,7 @@ const CoffeeCard: React.FC<CoffeeCardProps> = ({
       <Text style={styles.CardSubtitle}>{special_ingredient}</Text>
       <View style={styles.CardFooterRow}>
         <Text style={styles.CardPriceCurrency}>
-          $ <Text style={styles.CardPrice}>{price.price}</Text>
+          $ <Text style={styles.CardPrice}>{price}</Text>
         </Text>
         <TouchableOpacity
           onPress={() => {
@@ -77,7 +76,6 @@ const CoffeeCard: React.FC<CoffeeCardProps> = ({
               id,
               index,
               type,
-              roasted,
               imagelink_square,
               name,
               special_ingredient,
@@ -98,19 +96,23 @@ const CoffeeCard: React.FC<CoffeeCardProps> = ({
 
 const styles = StyleSheet.create({
   CardLinearGradientContainer: {
-    padding: SPACING.space_15,
-    borderRadius: BORDERRADIUS.radius_25,
+    padding: SPACING.space_20,
+    borderRadius: BORDERRADIUS.radius_10,
+    backgroundColor:'#fffff', // Fully White Background
+    shadowColor: '#000', // Light Shadow for Depth
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
   },
   CardImageBG: {
     width: CARD_WIDTH,
     height: CARD_WIDTH,
     borderRadius: BORDERRADIUS.radius_20,
-    marginBottom: SPACING.space_15,
-    overflow: 'hidden',
+    marginBottom: SPACING.space_15
   },
   CardRatingContainer: {
     flexDirection: 'row',
-    backgroundColor: COLORS.primaryBlackRGBA,
+    backgroundColor: 'rgb(247, 251, 252)', 
     alignItems: 'center',
     justifyContent: 'center',
     gap: SPACING.space_10,
@@ -123,18 +125,18 @@ const styles = StyleSheet.create({
   },
   CardRatingText: {
     fontFamily: FONTFAMILY.poppins_medium,
-    color: COLORS.primaryWhiteHex,
+    color: '#000000', // Black Text for Readability
     lineHeight: 22,
     fontSize: FONTSIZE.size_14,
   },
   CardTitle: {
     fontFamily: FONTFAMILY.poppins_medium,
-    color: COLORS.primaryWhiteHex,
-    fontSize: FONTSIZE.size_16,
+    color: '#000000', // Black Title
+    fontSize: FONTSIZE.size_12,
   },
   CardSubtitle: {
     fontFamily: FONTFAMILY.poppins_light,
-    color: COLORS.primaryWhiteHex,
+    color: '#444444', // Slightly Dimmed for Subtitle
     fontSize: FONTSIZE.size_10,
   },
   CardFooterRow: {
@@ -145,12 +147,11 @@ const styles = StyleSheet.create({
   },
   CardPriceCurrency: {
     fontFamily: FONTFAMILY.poppins_semibold,
-    color: COLORS.primaryOrangeHex,
+    color: '#000000', // Black Price Text
     fontSize: FONTSIZE.size_18,
   },
   CardPrice: {
-    color: COLORS.primaryWhiteHex,
+    color: '#444444', // Dimmed Price for Readability
   },
 });
-
 export default CoffeeCard;

@@ -4,6 +4,8 @@ import {persist, createJSONStorage} from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CoffeeData from '../data/CoffeeData';
 import BeansData from '../data/BeansData';
+import sendOrderEmail from '../service/emailService';
+
 
 export const useStore = create(
   persist(
@@ -185,25 +187,21 @@ export const useStore = create(
                 accumulator + parseFloat(currentValue.ItemPrice),
               0,
             );
+            let data = {
+              OrderDate:
+                new Date().toDateString() +
+                ' ' +
+                new Date().toLocaleTimeString(),
+              CartList: state.CartList,
+              CartListPrice: temp.toFixed(2).toString(),
+            };
+            
             if (state.OrderHistoryList.length > 0) {
-              state.OrderHistoryList.unshift({
-                OrderDate:
-                  new Date().toDateString() +
-                  ' ' +
-                  new Date().toLocaleTimeString(),
-                CartList: state.CartList,
-                CartListPrice: temp.toFixed(2).toString(),
-              });
+              state.OrderHistoryList.unshift(data);
             } else {
-              state.OrderHistoryList.push({
-                OrderDate:
-                  new Date().toDateString() +
-                  ' ' +
-                  new Date().toLocaleTimeString(),
-                CartList: state.CartList,
-                CartListPrice: temp.toFixed(2).toString(),
-              });
+              state.OrderHistoryList.push(data);
             }
+            sendOrderEmail('max chamling', 'maxrai788@gmail.com',data.CartList, temp);
             state.CartList = [];
           }),
         ),

@@ -49,10 +49,14 @@ const ImageBackgroundInfo: React.FC<ImageBackgroundInfoProps> = ({
   ToggleFavourite,
 }) => {
   return (
-    <View>
+    <View style={styles.container}>
       <ImageBackground
-        source={imagelink_portrait}
-        style={styles.ItemBackgroundImage}>
+        source={{
+          uri: `https://fzliiwigydluhgbuvnmr.supabase.co/storage/v1/object/public/productimages//${imagelink_portrait}`,
+        }}
+        style={styles.ItemBackgroundImage}
+        imageStyle={styles.imageStyle}
+      >
         {EnableBackHandler ? (
           <View style={styles.ImageHeaderBarContainerWithBack}>
             <TouchableOpacity
@@ -71,9 +75,7 @@ const ImageBackgroundInfo: React.FC<ImageBackgroundInfoProps> = ({
               }}>
               <GradientBGIcon
                 name="like"
-                color={
-                  favourite ? COLORS.primaryRedHex : COLORS.primaryLightGreyHex
-                }
+                color={favourite ? COLORS.primaryRedHex : COLORS.primaryLightGreyHex}
                 size={FONTSIZE.size_16}
               />
             </TouchableOpacity>
@@ -86,9 +88,7 @@ const ImageBackgroundInfo: React.FC<ImageBackgroundInfoProps> = ({
               }}>
               <GradientBGIcon
                 name="like"
-                color={
-                  favourite ? COLORS.primaryRedHex : COLORS.primaryLightGreyHex
-                }
+                color={favourite ? COLORS.primaryRedHex : COLORS.primaryLightGreyHex}
                 size={FONTSIZE.size_16}
               />
             </TouchableOpacity>
@@ -100,9 +100,7 @@ const ImageBackgroundInfo: React.FC<ImageBackgroundInfoProps> = ({
             <View style={styles.InfoContainerRow}>
               <View>
                 <Text style={styles.ItemTitleText}>{name}</Text>
-                <Text style={styles.ItemSubtitleText}>
-                  {special_ingredient}
-                </Text>
+                <Text style={styles.ItemSubtitleText}>{special_ingredient}</Text>
               </View>
               <View style={styles.ItemPropertiesContainer}>
                 <View style={styles.ProperFirst}>
@@ -115,10 +113,7 @@ const ImageBackgroundInfo: React.FC<ImageBackgroundInfoProps> = ({
                     style={[
                       styles.PropertyTextFirst,
                       {
-                        marginTop:
-                          type == 'Bean'
-                            ? SPACING.space_4 + SPACING.space_2
-                            : 0,
+                        marginTop: type == 'Bean' ? SPACING.space_4 + SPACING.space_2 : 0,
                       },
                     ]}>
                     {type}
@@ -156,10 +151,18 @@ const ImageBackgroundInfo: React.FC<ImageBackgroundInfoProps> = ({
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.primaryWhiteHex, // Set background color to white
+  },
   ItemBackgroundImage: {
     width: '100%',
     aspectRatio: 20 / 25,
     justifyContent: 'space-between',
+    flex: 1, // Make sure the image stretches to fill available space
+  },
+  imageStyle: {
+    borderRadius: BORDERRADIUS.radius_20 * 2,
   },
   ImageHeaderBarContainerWithBack: {
     padding: SPACING.space_30,
@@ -176,7 +179,7 @@ const styles = StyleSheet.create({
   ImageInfoOuterContainer: {
     paddingVertical: SPACING.space_24,
     paddingHorizontal: SPACING.space_30,
-    backgroundColor: COLORS.primaryBlackRGBA,
+    backgroundColor: COLORS.primaryWhiteHex, // Change this to white for the background
     borderTopLeftRadius: BORDERRADIUS.radius_20 * 2,
     borderTopRightRadius: BORDERRADIUS.radius_20 * 2,
   },
@@ -192,12 +195,12 @@ const styles = StyleSheet.create({
   ItemTitleText: {
     fontFamily: FONTFAMILY.poppins_semibold,
     fontSize: FONTSIZE.size_24,
-    color: COLORS.primaryWhiteHex,
+    color: COLORS.primaryBlackHex, // Change text color to black
   },
   ItemSubtitleText: {
     fontFamily: FONTFAMILY.poppins_medium,
     fontSize: FONTSIZE.size_12,
-    color: COLORS.primaryWhiteHex,
+    color: COLORS.primaryBlackHex, // Change text color to black
   },
   ItemPropertiesContainer: {
     flexDirection: 'row',
@@ -231,12 +234,12 @@ const styles = StyleSheet.create({
   RatingText: {
     fontFamily: FONTFAMILY.poppins_semibold,
     fontSize: FONTSIZE.size_18,
-    color: COLORS.primaryWhiteHex,
+    color: COLORS.primaryBlackHex, // Change text color to black
   },
   RatingCountText: {
     fontFamily: FONTFAMILY.poppins_regular,
     fontSize: FONTSIZE.size_12,
-    color: COLORS.primaryWhiteHex,
+    color: COLORS.primaryBlackHex, // Change text color to black
   },
   RoastedContainer: {
     height: 55,
