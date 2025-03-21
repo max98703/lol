@@ -2,12 +2,14 @@ import PropTypes from 'prop-types';
 import React, { useMemo, useState, useEffect, createContext } from 'react';
 import auth from '@react-native-firebase/auth';
 import { supabase } from '../utils/supabase';
+import NetInfo from '@react-native-community/netinfo'; // Import NetInfo
 
 export const AuthenticatedUserContext = createContext({});
 
 export const AuthenticatedUserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(true); // Track network connection
 
   useEffect(() => {
     const unsubscribeAuth = auth().onAuthStateChanged(async (authenticatedUser) => {
@@ -22,10 +24,23 @@ export const AuthenticatedUserProvider = ({ children }) => {
       }
     });
 
-    return unsubscribeAuth;
+    // Listen for network changes
+    const unsubscribeNetInfo = NetInfo.addEventListener(state => {
+      setIsConnected(state.isConnected); // Update network status
+    });
+
+    return () => {
+      unsubscribeAuth();
+      unsubscribeNetInfo(); // Cleanup the network listener on component unmount
+    };
   }, []);
 
   const fetchProducts = async () => {
+    if (!isConnected) {
+      console.log('No internet connection');
+      return []; // If no connection, return an empty array or handle as needed
+    }
+    
     setLoading(true); // Set loading to true before fetching
     const { data, error } = await supabase
       .from('products')
@@ -35,21 +50,26 @@ export const AuthenticatedUserProvider = ({ children }) => {
 
     if (error) {
       console.error('Error fetching products:', error.message);
+      setLoading(false);
       return [];
     } else {
       setLoading(false);
       return data;
     }
   };
+
   const fetchProductById = async (id) => {
+    if (!isConnected) {
+      console.log('No internet connection');
+      return null; // If no connection, return null or handle as needed
+    }
+
     const { data, error } = await supabase
       .from('products')
       .select(
-        `
-        *,
+        `*,
         product_items(id,size),
-        product_images(id,image_url,is_primary)
-      `
+        product_images(id,image_url,is_primary)`
       )
       .eq('id', id)
       .single(); // Fetch only one item
@@ -60,7 +80,15 @@ export const AuthenticatedUserProvider = ({ children }) => {
     }
     return data;
   };
-  const value = useMemo(() => ({ user, setUser, fetchProducts ,loading, fetchProductById}), [user]);
+
+  const value = useMemo(() => ({
+    user,
+    setUser,
+    fetchProducts,
+    loading,
+    fetchProductById,
+    isConnected, // Expose network status to children
+  }), [user, isConnected]);
 
   console.log('Authenticated User Context:', value);
 

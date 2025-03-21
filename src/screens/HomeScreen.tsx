@@ -22,7 +22,7 @@ import { AuthenticatedUserContext } from '../context/AuthenticatedUserContext';
 import ImageCarousel from '../components/ImageCarousel';
 
 const HomeScreen = ({ navigation }: any) => {
-  const { fetchProducts } = useContext(AuthenticatedUserContext);
+  const { fetchProducts,isConnected} = useContext(AuthenticatedUserContext);
   const [coffeeList, setCoffeeList] = useState([]);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
@@ -90,6 +90,20 @@ const HomeScreen = ({ navigation }: any) => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Show "Offline" message if no internet connection
+  if (!isConnected) {
+    return (
+      <View style={styles.ScreenContainer}>
+        <StatusBar backgroundColor={COLORS.primaryBlackHex} />
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <HeaderBar />
+          <Text style={styles.offlineMessage}>Offline</Text>
+        </ScrollView>
+      </View>
+    );
+  }
+
 
   const searchCoffee = useCallback((search: string) => {
     if (search !== '') {
@@ -176,16 +190,16 @@ const HomeScreen = ({ navigation }: any) => {
           </TouchableOpacity>
         </View> */}
           <View style={styles.container}>
-      <Text style={styles.title}>All Features</Text>
-      <View style={styles.featureContainer}>
-        <View style={styles.iconBox}>
-          <Icon name="filter-alt" size={24} color="black"  />
-        </View>
-          <View style={styles.iconBox}>
-          <Icon name="sort" size={24} color="red"  />
-        </View>
-      </View>
-    </View>
+            <Text style={styles.title}>All Features</Text>
+            <View style={styles.featureContainer}>
+              <View style={styles.iconBox}>
+                <Icon name="filter-alt" size={24} color="black"  />
+              </View>
+                <View style={styles.iconBox}>
+                <Icon name="sort" size={24} color="red"  />
+              </View>
+            </View>
+          </View>
 
     <ScrollView 
   horizontal 
@@ -397,6 +411,17 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  ScreenContainer: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+  },
+  offlineMessage: {
+    fontSize: 24,
+    color: 'red',
+    textAlign: 'center',
+    marginTop: '50%',
+    fontFamily: FONTFAMILY.poppins_semibold,
   },
 });
 

@@ -10,8 +10,9 @@ interface ImageItem {
 }
 
 const images: ImageItem[] = [
-  { id: 1, url: "https://i.gadgets360cdn.com/large/galaxy_z_fold_flip_6_leak_reddit_1717585044855.jpg" },
-  { id: 2, url: "https://cdn.zeebiz.com/sites/default/files/styles/zeebiz_850x478/public/2022/07/06/188630-untitled-design-2022-07-06t114212994.jpg?itok=g2nBP897" },
+  { id: 1, url: "https://www.apple.com/in/ipad-mini/images/overview/hero/fan__cyid3h2vl0wi_large.jpg" },
+  { id: 2, url: "https://www.mistermobile.com.sg/wp-content/uploads/2024/09/Work-File-iPhone-16-Blog-Banner-scaled.jpg" },
+  { id: 2, url: "https://www.apple.com/newsroom/images/product/watch/standard/Apple_watch-series7-availability_hero_10052021_big.jpg.slideshow-xlarge_2x.jpg" },
 ];
 
 const ImageCarousel: React.FC = () => {
@@ -80,7 +81,7 @@ const styles = StyleSheet.create({
     width: width - 20,
     height: 200,
     borderRadius: 10,
-    resizeMode: "cover",
+    resizeMode: "contain",
   },
   paginationContainer: {
     position: "absolute",
