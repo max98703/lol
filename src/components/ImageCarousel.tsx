@@ -10,8 +10,8 @@ interface ImageItem {
 }
 
 const images: ImageItem[] = [
-  { id: 1, url: "https://i.gadgets360cdn.com/large/galaxy_z_fold_flip_6_leak_reddit_1717585044855.jpg" },
-  { id: 2, url: "https://cdn.zeebiz.com/sites/default/files/styles/zeebiz_850x478/public/2022/07/06/188630-untitled-design-2022-07-06t114212994.jpg?itok=g2nBP897" },
+  { id: 1, url: "https://www.sizescreens.com/wp-content/uploads/2019/09/Apple-iPad-10.2-3-1.jpg" },
+  { id: 2, url: "https://images.hindustantimes.com/tech/img/2023/12/11/1600x900/Capture_1696611100338_1702278424106.PNG" },
 ];
 
 const ImageCarousel: React.FC = () => {
@@ -23,7 +23,7 @@ const ImageCarousel: React.FC = () => {
       const nextIndex = (activeIndex + 1) % images.length;
       setActiveIndex(nextIndex);
       carouselRef.current?.snapToItem(nextIndex);
-    }, 10000); // Auto-scroll every 4 seconds
+    }, 4000); // Auto-scroll every 4 seconds
 
     return () => clearInterval(interval);
   }, [activeIndex]);
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     width: width - 20,
     height: 200,
     borderRadius: 10,
-    resizeMode: "cover",
+    resizeMode: "contain",
   },
   paginationContainer: {
     position: "absolute",

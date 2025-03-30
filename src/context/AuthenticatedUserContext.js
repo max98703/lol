@@ -47,7 +47,7 @@ export const AuthenticatedUserProvider = ({ children }) => {
       .select(
         `
         *,
-        product_items(id,size),
+        product_items(id,size, sku_number),
         product_images(id,image_url,is_primary)
       `
       )
@@ -60,7 +60,37 @@ export const AuthenticatedUserProvider = ({ children }) => {
     }
     return data;
   };
-  const value = useMemo(() => ({ user, setUser, fetchProducts ,loading, fetchProductById}), [user]);
+
+  const fetchFilteredProducts = async (selectedCategory = null, selectedBrand = null, selectedPriceRange = null) => {
+    setLoading(true);
+
+    let query = supabase.from('products').select('*').eq('is_active', true);
+    
+    if (selectedCategory) {
+      query = query.eq('category', selectedCategory);
+    }
+
+    if (selectedBrand) {
+      query = query.eq('brand', selectedBrand);
+    }
+
+    if (selectedPriceRange) {
+      const [minPrice, maxPrice] = selectedPriceRange.split('-').map(Number);
+      query = query.gte('amount', minPrice).lte('amount', maxPrice);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error fetching filtered products:', error.message);
+      setLoading(false);
+      return [];
+    } else {
+      setLoading(false);
+      return data;
+    }
+  };
+  const value = useMemo(() => ({ user, setUser, fetchProducts ,loading, fetchProductById, fetchFilteredProducts}), [user]);
 
   console.log('Authenticated User Context:', value);
 
