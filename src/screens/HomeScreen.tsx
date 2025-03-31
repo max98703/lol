@@ -150,22 +150,16 @@ const HomeScreen = ({ navigation }: any) => {
               color={searchText.length > 0 ? COLORS.primaryOrangeHex : COLORS.primaryLightGreyHex}
             />
           </TouchableOpacity>
-          <TouchableOpacity
-        activeOpacity={1} 
-        onPress={() => navigation.push('Search')} 
-      >
-        <TextInput
-          placeholder="Find Your items..."
-          value={searchText}
-          onChangeText={text => {
-            setSearchText(text);
-            searchCoffee(text);
-          }}
-          onFocus={() => navigation.push('Search')} // Redirects when focused
-          placeholderTextColor="#999"
-          style={styles.TextInputContainer}
-        />
-      </TouchableOpacity>
+          <TextInput
+            placeholder="Find Your items..."
+            value={searchText}
+            onChangeText={text => {
+              setSearchText(text);
+              searchCoffee(text);
+            }}
+            placeholderTextColor={COLORS.primaryLightGreyHex}
+            style={styles.TextInputContainer}
+          />
           {searchText.length > 0 && (
             <TouchableOpacity onPress={resetSearchCoffee}>
               <CustomIcon style={styles.InputIcon} name="close" size={FONTSIZE.size_16} color={COLORS.primaryLightGreyHex} />

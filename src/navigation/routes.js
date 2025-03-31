@@ -32,11 +32,4 @@ export const publicRoutes = [
             animation: "slide_from_bottom"
          } 
     },
-    { 
-        name: "Search", 
-        component: require("../screens/SearchScreen").default, 
-        options: { 
-            animation: "slide_from_bottom"
-         } 
-    },
   ];

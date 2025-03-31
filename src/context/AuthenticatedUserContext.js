@@ -81,32 +81,6 @@ export const AuthenticatedUserProvider = ({ children }) => {
     return data;
   };
 
-  // Search filter function that can filter by category, brand, and product name
-  const searchProducts = async (searchQuery) => {
-    if (!isConnected) {
-      console.log('No internet connection');
-      return []; // If no connection, return an empty array
-    }
-    
-    setLoading(true); // Set loading to true before fetching
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('is_active', true)
-      .ilike('name', `%${searchQuery}%`) // Search by product name
-      .or(`category.ilike.%${searchQuery}%,brand.ilike.%${searchQuery}%`) // Search by category or brand
-      .range(0, 50);
-
-    if (error) {
-      console.error('Error fetching products:', error.message);
-      setLoading(false);
-      return [];
-    } else {
-      setLoading(false);
-      return data;
-    }
-  };
-
   const value = useMemo(() => ({
     user,
     setUser,
@@ -114,7 +88,6 @@ export const AuthenticatedUserProvider = ({ children }) => {
     loading,
     fetchProductById,
     isConnected, // Expose network status to children
-    searchProducts
   }), [user, isConnected]);
 
   console.log('Authenticated User Context:', value);
