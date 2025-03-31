@@ -164,6 +164,7 @@ const HomeScreen = ({ navigation }: any) => {
           onFocus={() => navigation.push('Search')} // Redirects when focused
           placeholderTextColor="#999"
           style={styles.TextInputContainer}
+          editable={false}
         />
       </TouchableOpacity>
           {searchText.length > 0 && (
