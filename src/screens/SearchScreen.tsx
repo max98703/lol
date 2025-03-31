@@ -1,57 +1,144 @@
-import React, { useState, useContext, useCallback, useEffect, useRef } from 'react';
-import { View, TextInput, StyleSheet, TouchableOpacity, Text, Keyboard , ToastAndroid } from 'react-native';
-import { COLORS, FONTFAMILY, FONTSIZE, SPACING, BORDERRADIUS } from '../theme/theme';
-import CustomIcon from '../components/CustomIcon';
+import React, { useState, useContext, useCallback, useEffect } from 'react';
+import {
+  View,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  Text,
+  Keyboard,
+  Animated,
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { AuthenticatedUserContext } from '../context/AuthenticatedUserContext';
-import SkeletonCard from '../components/SkeletonCard';
+
+import {
+  COLORS,
+  FONTFAMILY,
+  FONTSIZE,
+  SPACING,
+  BORDERRADIUS,
+} from '../theme/theme';
+import CustomIcon from '../components/CustomIcon';
 import { FlatList } from 'react-native';
-import CoffeeCard from '../components/CoffeeCard';
-import { Dimensions } from 'react-native';
+import Voice from '@react-native-voice/voice'; // Import the voice library
 
 const SearchScreen = ({ navigation }: any) => {
-  const { searchProducts } = useContext(AuthenticatedUserContext);
   const [searchText, setSearchText] = useState('');
-  const [coffeeList, setCoffeeList] = useState([]);
-  const ListRef = useRef<FlatList>();
-  const [loading, setLoading] = useState(false);
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
 
-  const handleSearch = useCallback(async () => {
-    if (searchText.trim() === '') {
-      setCoffeeList([]); // Clear the list if the search text is empty
-      setLoading(false);
-      return;
+  // Voice recognition state
+  const [isListening, setIsListening] = useState(false);
+
+  // Animated value for the mic button scale
+  const micScale = useState(new Animated.Value(1))[0];
+
+  const loadSearchHistory = useCallback(async () => {
+    try {
+      let history = await AsyncStorage.getItem('searchHistory');
+      history = history ? JSON.parse(history) : [];
+      setSearchHistory(history);
+    } catch (error) {
+      console.log('Error loading search history:', error);
     }
-
-    setLoading(true);
-    const fetchedProducts = await searchProducts(searchText); // Pass the search text to the search function
-    setCoffeeList(fetchedProducts);
-    setLoading(false);
-    Keyboard.dismiss(); // Dismiss the keyboard after the search is triggered
-  }, [searchText, searchProducts]);
+  }, []);
 
   useEffect(() => {
-    // Automatically trigger search if searchText changes
-    const delayDebounceFn = setTimeout(() => {
-      handleSearch();
-    }, 500); // debounce for 500ms
+    loadSearchHistory(); // Load history when the component mounts
 
-    return () => clearTimeout(delayDebounceFn); // Clear timeout if text changes
-  }, [searchText]);
+    // Initialize voice listener events
+    Voice.onSpeechStart = () => setIsListening(true);
+    Voice.onSpeechEnd = () => setIsListening(false);
+    Voice.onSpeechResults = (event) => {
+      const results = event.value;
+      if (results && results.length > 0) {
+        console.log(results);
+        setSearchText(results[0]); // Update search text with the recognized speech
+      }
+    };
 
-  const CoffeCardAddToCart = (item: any) => {
-   ToastAndroid.showWithGravity(
-         `${item.name} is Added to Cart`,
-         ToastAndroid.SHORT,
-         ToastAndroid.CENTER
-       );
+    return () => {
+      Voice.destroy().then(Voice.removeAllListeners); // Clean up listeners when the component unmounts
+    };
+  }, [loadSearchHistory]);
+
+  const handleSearch = useCallback(async () => {
+    if (!searchText.trim()) return;
+    Keyboard.dismiss();
+    navigation.pop();
+    saveSearchHistory(searchText);
+  
+    // Navigate to the SearchDetails screen with searchText as a parameter
+    navigation.navigate('SearchDetails', { query: searchText });
+  }, [searchText, navigation]);
+  
+  const saveSearchHistory = async (text: string) => {
+    try {
+      let history = await AsyncStorage.getItem('searchHistory');
+      history = history ? JSON.parse(history) : [];
+      if (!history.includes(text)) {
+        history.unshift(text);
+        if (history.length > 5) history.pop();
+        await AsyncStorage.setItem('searchHistory', JSON.stringify(history));
+        setSearchHistory(history);
+      }
+    } catch (error) {
+      console.log('Error saving search history:', error);
+    }
+  };
+
+  const clearSearchHistory = async () => {
+    try {
+      await AsyncStorage.removeItem('searchHistory');
+      setSearchHistory([]);
+    } catch (error) {
+      console.log('Error clearing search history:', error);
+    }
+  };
+
+  const resetSearchText = () => {
+    setSearchText('');
+  };
+
+  // Start voice recognition with animation
+  const startVoiceSearch = async () => {
+    console.log(isListening);
+
+    // Animate the mic button with a quick scale effect
+    Animated.sequence([
+      Animated.timing(micScale, {
+        toValue: 1.2, // Scale up
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(micScale, {
+        toValue: 1, // Return to normal size
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    try {
+      if (isListening) {
+        // Stop voice recognition if already listening
+        await Voice.stop(); // Stop voice recognition
+        setIsListening(false); // Update the state to reflect that it's not listening
+      } else {
+        // Start voice recognition
+        await Voice.start('en-US'); // Start voice recognition for English language
+        setIsListening(true); // Update the state to reflect that it's listening
+      }
+    } catch (error) {
+      console.log('Voice recognition error:', error);
+    }
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.searchBarContainer}>
-        <TouchableOpacity onPress={() => navigation.pop()} style={styles.IconContainer}>
-          <Icon name="arrow-back" size={24} color='rgba(39, 37, 37, 0.68)' />
+        <TouchableOpacity
+          onPress={() => navigation.pop()}
+          style={styles.IconContainer}>
+          <Icon name="arrow-back" size={24} color="rgba(39, 37, 37, 0.68)" />
         </TouchableOpacity>
         <View style={styles.InputContainerComponent}>
           <TouchableOpacity onPress={handleSearch}>
@@ -59,56 +146,72 @@ const SearchScreen = ({ navigation }: any) => {
               style={styles.InputIcon}
               name="search"
               size={FONTSIZE.size_18}
-              color={searchText.length > 0 ? COLORS.primaryOrangeHex : COLORS.primaryLightGreyHex}
+              color={
+                searchText.length > 0
+                  ? COLORS.primaryRedHex
+                  : COLORS.primaryLightGreyHex
+              }
             />
           </TouchableOpacity>
           <TextInput
             placeholder="Find Your items..."
             value={searchText}
             onChangeText={setSearchText}
-            onSubmitEditing={handleSearch} // Trigger search on hitting "Enter"
+            onSubmitEditing={handleSearch}
             placeholderTextColor={COLORS.primaryLightGreyHex}
             style={styles.TextInputContainer}
           />
-        </View>
-      </View>
-      <View style={styles.FlatListContainer}>
-        <FlatList
-          ref={ListRef}
-          data={coffeeList}
-          numColumns={2}
-          ListEmptyComponent={
-            loading ? (
-              <View style={styles.SkeletonContainer}>
-                <SkeletonCard />
-                <SkeletonCard />
-              </View>
-            ) : (
-              <View style={styles.EmptyListContainer}>
-                <Text style={styles.CategoryText}>No Data Available</Text>
-              </View>
-            )
-          }
-          showsVerticalScrollIndicator={false}
-          keyExtractor={(item) => item.id.toString()}
-          columnWrapperStyle={styles.FlatListRow}
-          renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => navigation.push('Details', { id: item.id })}>
-              <CoffeeCard
-                id={item.id}
-                index={item.index}
-                type={item.category}
-                imagelink_square={item.banner_url}
-                name={item.name}
-                special_ingredient={item.brand}
-                average_rating={item.rating}
-                price={item.amount}
-                buttonPressHandler={() => CoffeCardAddToCart(item)}
+          {searchText.length > 0 && (
+            <TouchableOpacity onPress={resetSearchText}>
+              <CustomIcon
+                style={styles.InputIcon}
+                name="close"
+                size={FONTSIZE.size_16}
+                color={COLORS.primaryLightGreyHex}
               />
             </TouchableOpacity>
           )}
-        />
+        </View>
+        {/* Animated voice search button */}
+        <TouchableOpacity
+          style={styles.voiceSearchIcon}
+          onPress={startVoiceSearch}>
+          <Animated.View style={{ transform: [{ scale: micScale }] }}>
+            <Icon
+              name={isListening ? 'mic' : 'mic-off'} // Change the icon based on the listening state
+              size={24}
+              color={isListening ? COLORS.primaryOrangeHex : COLORS.primaryBlackRGBA}
+            />
+          </Animated.View>
+        </TouchableOpacity>
       </View>
+
+      {searchHistory.length > 0 && (
+        <View style={styles.historyContainer}>
+          <View style={styles.historyHeader}>
+            <Text style={styles.historyTitle}>Recent Searches</Text>
+            <TouchableOpacity onPress={clearSearchHistory}>
+              <Text style={styles.clearHistoryText}>Clear History</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={searchHistory}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.historyItem}
+                onPress={() => {
+                  Keyboard.dismiss(); // Dismiss the keyboard first
+                  setSearchText(item); // Then update the input field
+                }}>
+                <Text style={styles.historyText}>{item}</Text>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      )}
     </View>
   );
 };
@@ -117,6 +220,37 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
+  },
+  historyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.space_10,
+  },
+  historyContainer: {
+    paddingHorizontal: SPACING.space_15,
+    marginBottom: SPACING.space_10,
+  },
+  historyTitle: {
+    fontFamily: FONTFAMILY.poppins_semibold,
+    fontSize: FONTSIZE.size_16,
+    color: '#555',
+    marginBottom: SPACING.space_5,
+  },
+  historyItem: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: COLORS.primaryDarkGreyHex,
+    borderRadius: 20,
+    marginRight: SPACING.space_10,
+  },
+  historyText: { color: 'black', fontSize: 14 },
+  clearHistoryText: {
+    color: 'red',
+    marginTop: 5,
+    fontSize: 12,
+    textAlign: 'right',
   },
   searchBarContainer: {
     flexDirection: 'row',
@@ -152,53 +286,10 @@ const styles = StyleSheet.create({
   InputIcon: {
     marginRight: SPACING.space_10,
   },
-  FlatListContainer: {
-    height:'100%',
-    paddingHorizontal: SPACING.space_15,
-    paddingBottom: SPACING.space_30,
-  },
-  FlatListRow: {
-    justifyContent: 'space-between',
-    marginBottom: SPACING.space_10,
-  },
-  EmptyListContainer: {
-    alignItems: 'center',
+  voiceSearchIcon: {
+    marginLeft: SPACING.space_10,
     justifyContent: 'center',
-    paddingVertical: SPACING.space_36 * 3.6,
-  },
-  SkeletonContainer: {
-    justifyContent: 'space-between',
-    width: '100%', // Ensures it takes full width
-    paddingHorizontal: SPACING.space_10,
-  },
-  SkeletonCard: {
-    width: '48%', // Adjust according to your layout
-    marginBottom: SPACING.space_20,
-    backgroundColor: 'red',
-    borderRadius: BORDERRADIUS.radius_10,
-  },
-  CategoryText: {
-    fontFamily: FONTFAMILY.poppins_semibold,
-    fontSize: FONTSIZE.size_16,
-    color: '#555',
-  },
-  SkeletonImage: {
-    width: '100%',
-    height: SPACING.space_36 * 2, // Adjust height for the image placeholder
-    backgroundColor: '#e0e0e0',
-    borderRadius: BORDERRADIUS.radius_10,
-  },
-  SkeletonText: {
-    marginTop: SPACING.space_10,
-    width: '70%',
-    height: SPACING.space_20,
-    backgroundColor: '#e0e0e0',
-    borderRadius: BORDERRADIUS.radius_10,
-  },
-  FilterToggleContainer: {
-    flexDirection: 'row',
-    marginBottom: SPACING.space_8,
-    paddingHorizontal: SPACING.space_20,
+    alignItems: 'center',
   },
 });
 

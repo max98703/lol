@@ -9,10 +9,11 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
+  Share,
+  Linking
 } from 'react-native';
 import { AuthenticatedUserContext } from '../context/AuthenticatedUserContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';  // Import MaterialIcons
-
 import {
   BORDERRADIUS,
   COLORS,
@@ -31,7 +32,22 @@ const DetailsScreen = ({ navigation, route }: any) => {
   const [price, setPrice] = useState<number | null>(null);
   const [mainImage, setMainImage] = useState<string>(''); // To store the main image URL
   const [fullDesc, setFullDesc] = useState(false);
+  
+  const myCustomShare = async() => {
+    const url = `myapp://details/${ItemOfIndex.id}`;
+    const shareOptions = {
+      title: 'Check this out',
+      message: `Check out this awesome content in our app! : ${url}`,
+      url: `myapp://details/${ItemOfIndex.id}`,
+    };
 
+    try {
+    
+      await Share.share( shareOptions );
+  } catch (error) {
+      alert(error.message);
+  }
+  };
   useEffect(() => {
     const fetchData = async () => {
       const fetchedProduct = await fetchProductById(id);
@@ -74,17 +90,13 @@ const DetailsScreen = ({ navigation, route }: any) => {
     <View style={styles.ScreenContainer}>
       <StatusBar backgroundColor={COLORS.primaryBlackHex} />
       
-      {/* Top Bar with Back Button, Share, Favorite Icons, and Product Title */}
+      {/* Top Bar with Back Button, Share, and Favorite Icons */}
       <View style={styles.TopBar}>
         <TouchableOpacity onPress={BackHandler} style={styles.IconContainer}>
           <Icon name="arrow-back" size={24} color='rgba(39, 37, 37, 0.68)' />
         </TouchableOpacity>
-        
-        {/* Centered Product Title */}
-        <Text style={styles.ProductTitle}>Product Details</Text>
-
         <View style={styles.RightIcons}>
-          <TouchableOpacity style={styles.IconContainers}>
+          <TouchableOpacity style={styles.IconContainers} onPress={myCustomShare}>
             <Icon name="share" size={24} color='black'/>
           </TouchableOpacity>
           <TouchableOpacity style={styles.IconContainers}>
@@ -96,7 +108,6 @@ const DetailsScreen = ({ navigation, route }: any) => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.ScrollViewFlex}>
-        
         {/* Main Product Image */}
         <View style={styles.mainImageContainer}>
           <Image
@@ -107,10 +118,10 @@ const DetailsScreen = ({ navigation, route }: any) => {
           />
         </View>
 
-        {/* Thumbnail Image List (Centered) */}
+        {/* Thumbnail Image List */}
         <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} style={styles.imageListContainer}>
           {ItemOfIndex?.product_images.map((image: any) => (
-            <TouchableOpacity key={image.id} onPress={() => handleImageChange(image.image_url)} style={styles.thumbnailWrapper}>
+            <TouchableOpacity key={image.id} onPress={() => handleImageChange(image.image_url)}>
               <Image
                 source={{
                   uri: `https://fzliiwigydluhgbuvnmr.supabase.co/storage/v1/object/public/productimages/${image.image_url}`,
@@ -164,7 +175,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    paddingTop: 4,
+    paddingTop:4,
     paddingHorizontal: SPACING.space_20,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -173,38 +184,31 @@ const styles = StyleSheet.create({
     height: 60,
   },
   IconContainer: {
-    width: 40,
-    height: 40,
+    width:40,
+    height:40,
     borderRadius: 50,
     borderColor: '#ccc',
     backgroundColor: 'rgba(227, 225, 225, 0.39)',
-    alignItems: 'center',
-    justifyContent: 'center'
+    alignItems:'center',
+    justifyContent:'center'
   },
   IconContainers: {
-    width: 35,
-    height: 35,
+    width:35,
+    height:35,
     borderRadius: 50,
     borderColor: '#ccc',
-    backgroundColor: 'rgba(227, 225, 225, 0.39)',
-    alignItems: 'center',
-    justifyContent:'space-between'
-  },
-  ProductTitle: {
-    fontFamily: FONTFAMILY.poppins_bold,
-    fontSize: FONTSIZE.size_18,
-    color: COLORS.primaryBlackHex,
-    textAlign: 'center',
-    flex: 1,
+    backgroundColor: '#fff',
+    alignItems:'center',
+    justifyContent:'center'
   },
   RightIcons: {
-    width: 100,
-    height: 40,
+    width:100,
+    height:40,
     borderRadius: 50,
     backgroundColor: 'rgba(227, 225, 225, 0.39)',
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
+    alignItems:'center',
+    justifyContent:'space-around',
   },
   ScrollViewFlex: {
     justifyContent: 'space-between',
@@ -225,12 +229,6 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.space_20,
     marginLeft: SPACING.space_10,
     marginRight: SPACING.space_10,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: -30,
-  },
-  thumbnailWrapper: {
-    marginRight: SPACING.space_10,
     borderRadius: 8,
     borderWidth: 2,
     borderColor: '#ccc',
@@ -239,6 +237,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     resizeMode: 'contain',
+    marginRight: SPACING.space_10,
   },
   ProductInfoContainer: {
     padding: SPACING.space_20,
@@ -286,7 +285,7 @@ const styles = StyleSheet.create({
   AddToCartButtonText: {
     fontFamily: FONTFAMILY.poppins_bold,
     fontSize: FONTSIZE.size_16,
-    color: 'white',
+    color: COLORS.primaryWhiteHex,
   },
 });
 

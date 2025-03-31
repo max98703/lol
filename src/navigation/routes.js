@@ -36,7 +36,14 @@ export const publicRoutes = [
         name: "Search", 
         component: require("../screens/SearchScreen").default, 
         options: { 
-            animation: "slide_from_bottom"
+            animation: "slide_from_right"
+         } 
+    },
+    { 
+        name: "SearchDetails", 
+        component: require("../screens/SearchDetailsScreeen").default, 
+        options: { 
+            animation: "slide_from_right"
          } 
     },
   ];

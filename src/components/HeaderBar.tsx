@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
   HeaderText: {
     fontFamily: FONTFAMILY.poppins_semibold,
     fontSize: FONTSIZE.size_20,
-    color: COLORS.primaryWhiteHex,
+    color: COLORS.primaryBlackHex
   },
   iconBox: {
     borderRadius: 8,
