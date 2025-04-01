@@ -28,7 +28,7 @@ import PriceFilter from '../components/PriceFilter';
 const CARD_WIDTH = Dimensions.get('window').width * 0.34;
 
 const HomeScreen = ({ navigation }: any) => {
-  const { fetchProducts } = useContext(AuthenticatedUserContext);
+  const { fetchProducts,isConnected} = useContext(AuthenticatedUserContext);
   const [coffeeList, setCoffeeList] = useState([]);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
@@ -97,6 +97,20 @@ const HomeScreen = ({ navigation }: any) => {
     fetchData();
   }, [fetchData]);
 
+  // Show "Offline" message if no internet connection
+  if (!isConnected) {
+    return (
+      <View style={styles.ScreenContainer}>
+        <StatusBar backgroundColor={COLORS.primaryBlackHex} />
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <HeaderBar />
+          <Text style={styles.offlineMessage}>Offline</Text>
+        </ScrollView>
+      </View>
+    );
+  }
+
+
   const searchCoffee = useCallback((search: string) => {
     if (search !== '') {
       ListRef?.current?.scrollToOffset({ animated: true, offset: 0 });
@@ -158,16 +172,22 @@ const HomeScreen = ({ navigation }: any) => {
               color={searchText.length > 0 ? COLORS.primaryOrangeHex : COLORS.primaryLightGreyHex}
             />
           </TouchableOpacity>
-          <TextInput
-            placeholder="Find Your items..."
-            value={searchText}
-            onChangeText={text => {
-              setSearchText(text);
-              searchCoffee(text);
-            }}
-            placeholderTextColor={COLORS.primaryLightGreyHex}
-            style={styles.TextInputContainer}
-          />
+          <TouchableOpacity
+        activeOpacity={1} 
+        onPress={() => navigation.push('Search')} 
+      >
+        <TextInput
+          placeholder="Find Your items..."
+          value={searchText}
+          onChangeText={text => {
+            setSearchText(text);
+            searchCoffee(text);
+          }}
+          onFocus={() => navigation.push('Search')} // Redirects when focused
+          placeholderTextColor="#999"
+          style={styles.TextInputContainer}
+        />
+      </TouchableOpacity>
           {searchText.length > 0 && (
             <TouchableOpacity onPress={resetSearchCoffee}>
               <CustomIcon style={styles.InputIcon} name="close" size={FONTSIZE.size_16} color={COLORS.primaryLightGreyHex} />
@@ -469,6 +489,17 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  ScreenContainer: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+  },
+  offlineMessage: {
+    fontSize: 24,
+    color: 'red',
+    textAlign: 'center',
+    marginTop: '50%',
+    fontFamily: FONTFAMILY.poppins_semibold,
   },
 });
 

@@ -85,12 +85,14 @@ const DetailsScreen = ({ navigation, route }: any) => {
   return (
     <View style={styles.ScreenContainer}>
       <StatusBar backgroundColor={COLORS.primaryBlackHex} />
-
-      {/* Top Bar */}
       <View style={styles.TopBar}>
         <TouchableOpacity onPress={BackHandler} style={styles.IconContainer}>
           <Icon name="arrow-back" size={24} color='#272525' />
         </TouchableOpacity>
+        
+        {/* Centered Product Title */}
+        <Text style={styles.ProductTitle}>Product Details</Text>
+
         <View style={styles.RightIcons}>
           <TouchableOpacity style={styles.IconContainers}>
             <Icon name="share" size={24} color='black' />
@@ -139,6 +141,7 @@ const DetailsScreen = ({ navigation, route }: any) => {
     ItemOfIndex?.product_images.map((image: any) => (
       <TouchableOpacity key={image.id} onPress={() => handleImageChange(image.image_url)}>
         <View style={[styles.thumbnailContainer, mainImage === image.image_url && styles.activeThumbnail]}>
+
           <Image
             source={{
               uri: `https://fzliiwigydluhgbuvnmr.supabase.co/storage/v1/object/public/productimages/${image.image_url}`,
@@ -244,7 +247,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    paddingTop:4,
+    paddingTop: 4,
     paddingHorizontal: SPACING.space_20,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -253,31 +256,38 @@ const styles = StyleSheet.create({
     height: 60,
   },
   IconContainer: {
-    width:40,
-    height:40,
+    width: 40,
+    height: 40,
     borderRadius: 50,
     borderColor: '#ccc',
     backgroundColor: 'rgba(227, 225, 225, 0.39)',
-    alignItems:'center',
-    justifyContent:'center'
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   IconContainers: {
-    width:35,
-    height:35,
+    width: 35,
+    height: 35,
     borderRadius: 50,
     borderColor: '#ccc',
-    backgroundColor: '#fff',
-    alignItems:'center',
-    justifyContent:'center'
+    backgroundColor: 'rgba(227, 225, 225, 0.39)',
+    alignItems: 'center',
+    justifyContent:'space-between'
+  },
+  ProductTitle: {
+    fontFamily: FONTFAMILY.poppins_bold,
+    fontSize: FONTSIZE.size_18,
+    color: COLORS.primaryBlackHex,
+    textAlign: 'center',
+    flex: 1,
   },
   RightIcons: {
-    width:100,
-    height:40,
+    width: 100,
+    height: 40,
     borderRadius: 50,
     backgroundColor: 'rgba(227, 225, 225, 0.39)',
     flexDirection: 'row',
-    alignItems:'center',
-    justifyContent:'space-around',
+    alignItems: 'center',
+    justifyContent: 'space-around',
   },
   ScrollViewFlex: {
     marginTop: 60, // Reduced the top margin
