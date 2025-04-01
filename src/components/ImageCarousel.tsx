@@ -10,9 +10,8 @@ interface ImageItem {
 }
 
 const images: ImageItem[] = [
-  { id: 1, url: "https://www.apple.com/in/ipad-mini/images/overview/hero/fan__cyid3h2vl0wi_large.jpg" },
-  { id: 2, url: "https://www.mistermobile.com.sg/wp-content/uploads/2024/09/Work-File-iPhone-16-Blog-Banner-scaled.jpg" },
-  { id: 2, url: "https://www.apple.com/newsroom/images/product/watch/standard/Apple_watch-series7-availability_hero_10052021_big.jpg.slideshow-xlarge_2x.jpg" },
+  { id: 1, url: "https://www.sizescreens.com/wp-content/uploads/2019/09/Apple-iPad-10.2-3-1.jpg" },
+  { id: 2, url: "https://images.hindustantimes.com/tech/img/2023/12/11/1600x900/Capture_1696611100338_1702278424106.PNG" },
 ];
 
 const ImageCarousel: React.FC = () => {
@@ -24,7 +23,7 @@ const ImageCarousel: React.FC = () => {
       const nextIndex = (activeIndex + 1) % images.length;
       setActiveIndex(nextIndex);
       carouselRef.current?.snapToItem(nextIndex);
-    }, 10000); // Auto-scroll every 4 seconds
+    }, 4000); // Auto-scroll every 4 seconds
 
     return () => clearInterval(interval);
   }, [activeIndex]);

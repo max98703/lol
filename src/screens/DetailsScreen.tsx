@@ -5,13 +5,15 @@ import {
   StyleSheet,
   Text,
   View,
-  TouchableWithoutFeedback,
   TouchableOpacity,
   Image,
   Dimensions,
+  Animated,
 } from 'react-native';
 import { AuthenticatedUserContext } from '../context/AuthenticatedUserContext';
-import Icon from 'react-native-vector-icons/MaterialIcons';  // Import MaterialIcons
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import SkeletonPlaceholder from 'react-native-skeleton-placeholder';  // Import the skeleton placeholder
+
 
 import {
   BORDERRADIUS,
@@ -21,7 +23,7 @@ import {
   SPACING,
 } from '../theme/theme';
 
-const { width: screenWidth } = Dimensions.get('window'); // Get screen width for product images
+const { width: screenWidth } = Dimensions.get('window');
 
 const DetailsScreen = ({ navigation, route }: any) => {
   const { id } = route.params;
@@ -29,8 +31,10 @@ const DetailsScreen = ({ navigation, route }: any) => {
   const [ItemOfIndex, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [price, setPrice] = useState<number | null>(null);
-  const [mainImage, setMainImage] = useState<string>(''); // To store the main image URL
+  const [mainImage, setMainImage] = useState<string>('');
   const [fullDesc, setFullDesc] = useState(false);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const fadeAnim = useState(new Animated.Value(0))[0];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -38,7 +42,7 @@ const DetailsScreen = ({ navigation, route }: any) => {
       setProduct(fetchedProduct);
       const primaryImage = fetchedProduct.product_images.find((image: any) => image.is_primary === true);
       if (primaryImage) {
-        setMainImage(primaryImage.image_url); // Set the primary image as the main image
+        setMainImage(primaryImage.image_url);
       }
       setLoading(false);
     };
@@ -51,33 +55,39 @@ const DetailsScreen = ({ navigation, route }: any) => {
     }
   }, [ItemOfIndex]);
 
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  }, [mainImage]);
+
   const handleImageChange = (imageUrl: string) => {
-    setMainImage(imageUrl); // Update the main image when a thumbnail is clicked
+    setMainImage(imageUrl);
+    fadeAnim.setValue(0);
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleSizeSelection = (size: string) => {
+    setSelectedSize(size);
   };
 
   const BackHandler = () => {
     navigation.pop();
   };
 
-  const addToCarthandler = (id: any, name: any, price: any) => {
-    // Handle add to cart
-    addToCart({ id, name, price });
-    calculateCartPrice();
-    navigation.navigate('Cart');
-  };
-
-  if (loading) {
-    return <Text>Loading...</Text>;
-  }
 
   return (
     <View style={styles.ScreenContainer}>
       <StatusBar backgroundColor={COLORS.primaryBlackHex} />
-      
-      {/* Top Bar with Back Button, Share, Favorite Icons, and Product Title */}
       <View style={styles.TopBar}>
         <TouchableOpacity onPress={BackHandler} style={styles.IconContainer}>
-          <Icon name="arrow-back" size={24} color='rgba(39, 37, 37, 0.68)' />
+          <Icon name="arrow-back" size={24} color='#272525' />
         </TouchableOpacity>
         
         {/* Centered Product Title */}
@@ -85,7 +95,7 @@ const DetailsScreen = ({ navigation, route }: any) => {
 
         <View style={styles.RightIcons}>
           <TouchableOpacity style={styles.IconContainers}>
-            <Icon name="share" size={24} color='black'/>
+            <Icon name="share" size={24} color='black' />
           </TouchableOpacity>
           <TouchableOpacity style={styles.IconContainers}>
             <Icon name="favorite-border" size={24} color='black' />
@@ -93,71 +103,144 @@ const DetailsScreen = ({ navigation, route }: any) => {
         </View>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.ScrollViewFlex}>
-        
-        {/* Main Product Image */}
-        <View style={styles.mainImageContainer}>
+      <ScrollView 
+  showsVerticalScrollIndicator={false} 
+  contentContainerStyle={styles.ScrollViewFlex}
+  scrollEventThrottle={16}  // Improves performance of scroll events
+  decelerationRate="fast"   // Makes scrolling smoother and faster
+>
+<View style={styles.imageRowContainer}>
+        {/* Animated Main Product Image */}
+        <Animated.View style={[styles.mainImageContainer, { opacity: fadeAnim }]}>
+        {ItemOfIndex ? (
+          <Animated.View style={[styles.mainImageContainer, { opacity: fadeAnim }]}>
+            <Image
+              source={{
+                uri: `https://fzliiwigydluhgbuvnmr.supabase.co/storage/v1/object/public/productimages/${mainImage}`,
+              }}
+              style={styles.mainImage}
+            />
+          </Animated.View>
+        ) : (
+          // Skeleton loader while the data is being fetched
+          <SkeletonPlaceholder>
+            <View style={styles.mainImageContainer}>
+              <View style={styles.mainImage} />
+            </View>
+          </SkeletonPlaceholder>
+        )}
+        </Animated.View>
+
+        {/* Thumbnail Image List */}
+        <ScrollView
+  showsVerticalScrollIndicator={false}
+  style={[styles.imageListContainer, { height: 270 }]} // You can adjust the height based on your design
+  contentContainerStyle={{ paddingBottom: 20 }} // Adjust padding as necessary to ensure smooth scroll
+>
+  {ItemOfIndex ? (
+    ItemOfIndex?.product_images.map((image: any) => (
+      <TouchableOpacity key={image.id} onPress={() => handleImageChange(image.image_url)}>
+        <View style={[styles.thumbnailContainer, mainImage === image.image_url && styles.activeThumbnail]}>
+
           <Image
             source={{
-              uri: `https://fzliiwigydluhgbuvnmr.supabase.co/storage/v1/object/public/productimages/${mainImage}`,
+              uri: `https://fzliiwigydluhgbuvnmr.supabase.co/storage/v1/object/public/productimages/${image.image_url}`,
             }}
-            style={styles.mainImage}
+            style={styles.thumbnailImage}
           />
         </View>
+      </TouchableOpacity>
+    ))
+  ) : (
+    // Skeleton loader for image thumbnails
+    [...Array(3)].map((_, index) => (
+      <SkeletonPlaceholder key={index}>
+        <View style={styles.skeletonThumbnailContainer} />
+      </SkeletonPlaceholder>
+    ))
+  )}
+</ScrollView>
 
-        {/* Thumbnail Image List (Centered) */}
-        <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} style={styles.imageListContainer}>
-          {ItemOfIndex?.product_images.map((image: any) => (
-            <TouchableOpacity key={image.id} onPress={() => handleImageChange(image.image_url)} style={styles.thumbnailWrapper}>
-              <Image
-                source={{
-                  uri: `https://fzliiwigydluhgbuvnmr.supabase.co/storage/v1/object/public/productimages/${image.image_url}`,
-                }}
-                style={styles.thumbnailImage}
-              />
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
 
+</View>
         {/* Product Info */}
         <View style={styles.ProductInfoContainer}>
-          <Text style={styles.ProductName}>{ItemOfIndex.name}</Text>
-          <Text style={styles.ProductCategory}>{ItemOfIndex.category}</Text>
-          <Text style={styles.ProductPrice}>${price}</Text>
+          {/* Product Name & Price in Same Row */}
+          <View style={styles.NamePriceRow}>
+          {ItemOfIndex ? (
+              <>
+                <Text style={styles.ProductName}>{ItemOfIndex.name}</Text>
+              </>
+            ) : (
+              // Skeleton loader for product name and price
+              <SkeletonPlaceholder>
+                <View style={styles.skeletonText} />
+              </SkeletonPlaceholder>
+            )}
+            {/* <Text style={styles.ProductPrice}>${price}</Text> */}
+          </View>
+
+          {/* Rating & Reviews in Same Row */}
+          {/* <View style={styles.ReviewContainer}>
+            <Text style={styles.RatingText}>⭐ {ItemOfIndex.rating} </Text>
+            <Text style={styles.ReviewCountText}>({ItemOfIndex.total_reviews} reviews)</Text>
+          </View> */}
+
+          {/* Size Selection */}
+          {/* <View style={styles.SizeContainer}>
+            <Text style={styles.SizeTitle}>Available Sizes:</Text>
+            <View style={styles.SizeList}>
+              {ItemOfIndex.product_items?.map((item: any) => (
+                <TouchableOpacity
+                  key={item.id}
+                  onPress={() => handleSizeSelection(item.size)}
+                  style={[
+                    styles.SizeButton,
+                    selectedSize === item.size && styles.SelectedSizeButton,
+                  ]}
+                >
+                  <Text style={styles.SizeText}>{item.size}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View> */}
 
           {/* Description Section */}
           <View style={styles.FooterInfoArea}>
-            <Text style={styles.InfoTitle}>Description</Text>
-            {fullDesc ? (
-              <TouchableWithoutFeedback onPress={() => setFullDesc(prev => !prev)}>
-                <Text style={styles.DescriptionText}>{ItemOfIndex.description}</Text>
-              </TouchableWithoutFeedback>
-            ) : (
-              <TouchableWithoutFeedback onPress={() => setFullDesc(prev => !prev)}>
-                <Text numberOfLines={3} style={styles.DescriptionText}>
-                  {ItemOfIndex.description}
-                </Text>
-              </TouchableWithoutFeedback>
-            )}
+            <TouchableOpacity onPress={() => setFullDesc(prev => !prev)}>
+              <Text numberOfLines={fullDesc ? undefined : 3} style={styles.DescriptionText}>
+                {ItemOfIndex ? ItemOfIndex.description : ''}
+              </Text>
+              <Text style={styles.ReadMore}>{fullDesc ? 'Read less' : 'Read more'}</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Add to Cart Button */}
-          <TouchableOpacity
-            style={styles.AddToCartButton}
-            onPress={() => addToCarthandler(ItemOfIndex.id, ItemOfIndex.name, price)}>
-            <Text style={styles.AddToCartButtonText}>Add to Cart</Text>
-          </TouchableOpacity>
+         
         </View>
+       
       </ScrollView>
+      <View style={styles.CartRow}>
+            <TouchableOpacity style={styles.AddToCartButton}>
+              <Text style={styles.AddToCartButtonText}>Add to Cart</Text>
+          
+            <Text style={styles.ProductPrice}>${ItemOfIndex?.amount}</Text>
+            </TouchableOpacity>
+          </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   ScreenContainer: {
+    flex: 1,
     backgroundColor: 'white',
+  },
+  imageRowContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: SPACING.space_20,
   },
   TopBar: {
     position: 'absolute',
@@ -207,87 +290,119 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
   },
   ScrollViewFlex: {
-    justifyContent: 'space-between',
-    marginTop: 60,  // To ensure content is not hidden behind the top bar
+    marginTop: 60, // Reduced the top margin
+    paddingBottom:100
   },
+
+  /** Main Image */
   mainImageContainer: {
-    marginBottom: SPACING.space_20,
+    width:'70%',
+    height:270,
     alignItems: 'center',
-    width: '100%',
+    justifyContent:'center',
+    backgroundColor: "#fff",
   },
   mainImage: {
-    width: '80%',
+    width: '100%',
     aspectRatio: 1,
-    borderRadius: BORDERRADIUS.radius_20,
     resizeMode: 'contain',
   },
   imageListContainer: {
-    marginBottom: SPACING.space_20,
-    marginLeft: SPACING.space_10,
-    marginRight: SPACING.space_10,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: -30,
+    padding: SPACING.space_10,
   },
-  thumbnailWrapper: {
-    marginRight: SPACING.space_10,
+
+  /** Thumbnail */
+  thumbnailContainer: {
+    padding: 5,
     borderRadius: 8,
+    marginHorizontal: 5,
     borderWidth: 2,
-    borderColor: '#ccc',
+    borderColor: 'transparent',
+    marginBottom:4
+  },
+  activeThumbnail: {
+    borderColor: COLORS.secondaryBlackRGBA,
   },
   thumbnailImage: {
-    width: 80,
-    height: 80,
+    width: 70,
+    height: 70,
     resizeMode: 'contain',
   },
+
   ProductInfoContainer: {
     padding: SPACING.space_20,
   },
   ProductName: {
-    fontFamily: FONTFAMILY.poppins_semibold,
-    fontSize: FONTSIZE.size_20,
-    color: COLORS.primaryBlackHex,
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: 'black',
+    marginBottom: 5,
   },
-  ProductCategory: {
-    fontFamily: FONTFAMILY.poppins_regular,
-    fontSize: FONTSIZE.size_14,
-    color: COLORS.primaryGreyHex,
-    marginBottom: SPACING.space_10,
+  ReviewContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
   },
-  ProductPrice: {
-    fontFamily: FONTFAMILY.poppins_bold,
-    fontSize: FONTSIZE.size_18,
+  RatingText: {
+    fontSize: 16,
     color: COLORS.primaryOrangeHex,
-    marginBottom: SPACING.space_20,
   },
-  FooterInfoArea: {
-    marginTop: SPACING.space_20,
-  },
-  InfoTitle: {
-    fontFamily: FONTFAMILY.poppins_semibold,
-    fontSize: FONTSIZE.size_16,
-    color: COLORS.primaryBlackHex,
-    marginBottom: SPACING.space_10,
+  ReviewCountText: {
+    fontSize: 16,
+    color: COLORS.primaryGreyHex,
+    marginLeft: 5,
   },
   DescriptionText: {
-    letterSpacing: 0.5,
-    fontFamily: FONTFAMILY.poppins_regular,
-    fontSize: FONTSIZE.size_14,
-    color: COLORS.primaryBlackHex,
-    marginBottom: SPACING.space_30,
+    fontSize: 14,
+    color: COLORS.primaryBlackRGBA,
   },
+  ReadMore: {
+    color: COLORS.primaryOrangeHex,
+    fontWeight: 'bold',
+    marginTop: 5,
+  },
+  CartRow: {
+    position: 'absolute',
+    bottom: 20,
+    left: 70,
+    right: 70,
+  },
+  
   AddToCartButton: {
-    backgroundColor: COLORS.primaryOrangeHex,
-    borderRadius: BORDERRADIUS.radius_10,
-    paddingVertical: SPACING.space_12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: 'black',
+    borderRadius:50,
+    paddingVertical: 16,
+    paddingHorizontal: SPACING.space_20,
   },
+  skeletonText: {
+    width: 100,
+    height: 20,
+    marginBottom: 10,
+    borderRadius: 5,
+  },
+  
   AddToCartButtonText: {
-    fontFamily: FONTFAMILY.poppins_bold,
-    fontSize: FONTSIZE.size_16,
+    fontSize: 16,
     color: 'white',
+    fontWeight: 'bold',
   },
+  
+  ProductPrice: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  skeletonThumbnailContainer: {
+    width: 70,
+    height: 70,
+    marginHorizontal: 5,
+    borderRadius: 8,
+    marginBottom:4
+  },
+
 });
 
 export default DetailsScreen;
