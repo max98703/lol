@@ -1,5 +1,7 @@
 import React, { useRef, useState, useContext, useEffect, useCallback } from 'react';
-import SkeletonCard from '../components/SkeletonCard';
+import SkeletonPlaceholder from 'react-native-skeleton-placeholder';  // Import the skeleton placeholder
+
+
 import {
   ScrollView,
   StatusBar,
@@ -20,6 +22,10 @@ import CoffeeCard from '../components/CoffeeCard';
 import { Dimensions } from 'react-native';
 import { AuthenticatedUserContext } from '../context/AuthenticatedUserContext';
 import ImageCarousel from '../components/ImageCarousel';
+import FilterModal from '../components/FilterModal';
+import PriceFilter from '../components/PriceFilter';
+
+const CARD_WIDTH = Dimensions.get('window').width * 0.34;
 
 const HomeScreen = ({ navigation }: any) => {
   const { fetchProducts,isConnected} = useContext(AuthenticatedUserContext);
@@ -91,20 +97,6 @@ const HomeScreen = ({ navigation }: any) => {
     fetchData();
   }, [fetchData]);
 
-  // Show "Offline" message if no internet connection
-  if (!isConnected) {
-    return (
-      <View style={styles.ScreenContainer}>
-        <StatusBar backgroundColor={COLORS.primaryBlackHex} />
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <HeaderBar />
-          <Text style={styles.offlineMessage}>Offline</Text>
-        </ScrollView>
-      </View>
-    );
-  }
-
-
   const searchCoffee = useCallback((search: string) => {
     if (search !== '') {
       ListRef?.current?.scrollToOffset({ animated: true, offset: 0 });
@@ -134,7 +126,24 @@ const HomeScreen = ({ navigation }: any) => {
     setSortedCoffee(filterCoffeeList(type, filterValue, coffeeList));
   }, [coffeeList, filterCoffeeList]);
 
+  const [filterVisible, setFilterVisible] = useState(false);
+  
+  const [filterVisibles, setFilterVisibles] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState(null);
 
+  const handleFilterChanges = (filterType) => {
+    console.log(filterType.value); // Check the filter type to make sure it's correct
+    let sortedItems = [...sortedCoffee];
+  
+    if (filterType && filterType.value === 'lowToHigh') {
+      sortedItems = sortedItems.sort((a, b) => a.amount - b.amount);
+    } else if (filterType && filterType.value === 'highToLow') {
+      sortedItems = sortedItems.sort((a, b) => b.amount - a.amount);
+    }
+  
+    setSortedCoffee(sortedItems); // Set the filtered list based on the sorting
+  };
+  
   return (
     <View style={styles.ScreenContainer}>
       <StatusBar backgroundColor={COLORS.primaryBlackHex} />
@@ -175,38 +184,31 @@ const HomeScreen = ({ navigation }: any) => {
         </View>
 
         <ImageCarousel/>
-
-        {/* <View style={styles.FilterToggleContainer}>
-          <TouchableOpacity
-            onPress={() => {
-              setActiveFilter('category');
-              setBrandIndex({ index: 0, brand: 'All' });
-              handleFilterChange('All');
-            }}
-          >
-            <Text style={[styles.FilterToggle, activeFilter === 'category' && styles.ActiveFilter]}>Category</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              setActiveFilter('brand');
-              setCategoryIndex({ index: 0, category: 'All' });
-              handleFilterChange('All');
-            }}
-          >
-            <Text style={[styles.FilterToggle, activeFilter === 'brand' && styles.ActiveFilter]}>Brand</Text>
-          </TouchableOpacity>
-        </View> */}
-          <View style={styles.container}>
-            <Text style={styles.title}>All Features</Text>
-            <View style={styles.featureContainer}>
-              <View style={styles.iconBox}>
-                <Icon name="filter-alt" size={24} color="black"  />
-              </View>
-                <View style={styles.iconBox}>
-                <Icon name="sort" size={24} color="red"  />
-              </View>
-            </View>
-          </View>
+        <FilterModal
+        visible={filterVisible}
+        onClose={() => setFilterVisible(false)}
+        setFilteredList={(filteredList) => setSortedCoffee(filteredList)} 
+      />
+      <PriceFilter 
+        visibles={filterVisibles}
+        onClose={() => setFilterVisibles(false)}
+        handleFilter={handleFilterChanges}
+      />
+      <View style={styles.container}>
+      <Text style={styles.title}>All Features</Text>
+      <View style={styles.featureContainer}>
+        <View style={styles.iconBox}>
+            <TouchableOpacity onPress={() => setFilterVisible(true)}>
+          <Icon name="filter-alt" size={24} color="black" />
+            </TouchableOpacity>
+        </View>
+          <View style={styles.iconBox}>
+            <TouchableOpacity onPress={() => setFilterVisibles(true)}>
+          <Icon name="sort" size={24} color="red"/>
+            </TouchableOpacity>
+        </View>
+      </View>
+    </View>
 
     <ScrollView 
   horizontal 
@@ -251,13 +253,25 @@ const HomeScreen = ({ navigation }: any) => {
             numColumns={2}
             ListEmptyComponent={
               loading ? (
+               
+                <SkeletonPlaceholder style={styles.SkeletonFlatListContainer}>
                 <View style={styles.SkeletonContainer}>
-                  <SkeletonCard />
-                  <SkeletonCard />
+                  {[...Array(4)].reduce((rows, _, index, array) => {
+                    if (index % 2 === 0) rows.push(array.slice(index, index + 2));
+                    return rows;
+                  }, []).map((row, rowIndex) => (
+                    <View key={rowIndex} style={styles.SkeletonRow}>
+                      {row.map((_, index) => (
+                        <View key={index} style={styles.skeletonThumbnailContainer} />
+                      ))}
+                    </View>
+                  ))}
                 </View>
+              </SkeletonPlaceholder>
+              
               ) : (
                 <View style={styles.EmptyListContainer}>
-                  <Text style={styles.CategoryText}>No Coffee Available</Text>
+                  <Text style={styles.CategoryText}>No Data Available</Text>
                 </View>
               )
             }
@@ -337,7 +351,7 @@ const styles = StyleSheet.create({
   },
   FlatListContainer: {
     paddingHorizontal: SPACING.space_15,
-    paddingBottom: SPACING.space_30,
+    paddingBottom: 40,
   },
   FlatListRow: {
     justifyContent: 'space-between',
@@ -352,13 +366,14 @@ const styles = StyleSheet.create({
   SkeletonContainer: {
     justifyContent: 'space-between',
     width: '100%', // Ensures it takes full width
-    paddingHorizontal: SPACING.space_10,
+    paddingHorizontal: SPACING.space_15,
+    paddingBottom: 40,
   },
   SkeletonCard: {
-    width: '48%', // Adjust according to your layout
-    marginBottom: SPACING.space_20,
-    backgroundColor: 'red',
-    borderRadius: BORDERRADIUS.radius_10,
+    width: CARD_WIDTH,
+    height: CARD_WIDTH,
+    borderRadius: BORDERRADIUS.radius_20,
+    marginBottom: SPACING.space_15
   },
   SkeletonImage: {
     width: '100%',
@@ -377,6 +392,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: SPACING.space_8,
     paddingHorizontal: SPACING.space_20,
+  },
+  SkeletionFlatListRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between', // Ensures spacing between skeletons
+    alignItems: 'center',
+  },
+  SkeletonFlatListContainer: {
+   
+  },
+  SkeletonContainer: {
+    width: '100%',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 10, // Space between rows
+  },
+  SkeletonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between', // Ensures two per row with spacing
+    width: '100%',
+    gap: 10, // Space between skeletons
+  },
+  skeletonThumbnailContainer: {
+    width: '48%', // Ensures two items per row
+    height: 150, // Adjust height as needed
+    backgroundColor: '#E0E0E0', // Light grey placeholder color
+    borderRadius: 8, // Smooth UI
   },
   FilterToggle: {
     fontSize: 16,

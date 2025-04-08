@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TouchableOpacity, Modal, StyleSheet, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, StyleSheet, FlatList,TouchableWithoutFeedback} from 'react-native';
 import { COLORS, FONTSIZE, SPACING } from '../theme/theme';
 
 const categories = [
@@ -81,6 +81,11 @@ const FilterModal = ({ visible, onClose, setFilteredList }) => {
     }
   };
 
+  const handleOutsidePress = () => {
+    // Close the modal when clicking outside
+    onClose();
+  };
+
   const renderDropdown = (options, dropdownVisible, type, selectedValue) => {
     return (
       <View style={styles.dropdownContainer}>
@@ -111,7 +116,9 @@ const FilterModal = ({ visible, onClose, setFilteredList }) => {
 
   return (
     <Modal transparent={true} animationType="slide" visible={visible} onRequestClose={onClose}>
+      <TouchableWithoutFeedback onPress={handleOutsidePress}>
       <View style={styles.overlay}>
+      <TouchableWithoutFeedback>
         <View style={styles.modalContainer}>
           <Text style={styles.title}>Filter Options</Text>
 
@@ -133,7 +140,9 @@ const FilterModal = ({ visible, onClose, setFilteredList }) => {
             </TouchableOpacity>
           </View>
         </View>
+        </TouchableWithoutFeedback>
       </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };
@@ -155,11 +164,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: SPACING.space_10,
+     color: COLORS.primaryBlackHex,
   },
   sectionTitle: {
     fontSize: FONTSIZE.size_16,
     fontWeight: 'bold',
     marginVertical: SPACING.space_10,
+     color: COLORS.primaryBlackHex,
   },
   dropdownContainer: {
     marginBottom: SPACING.space_10,
@@ -170,6 +181,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.space_10,
     backgroundColor: 'rgba(251, 237, 237, 0.5)',
     borderRadius: 8,
+     color: COLORS.primaryBlackHex,
   },
   dropdown: {
     backgroundColor: COLORS.primaryWhiteHex,

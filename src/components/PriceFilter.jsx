@@ -1,5 +1,5 @@
-import React, { useState, useContext } from 'react';
-import { View, Text, TouchableOpacity, Modal, StyleSheet, FlatList } from 'react-native';
+import React, { useState} from 'react';
+import { View, Text, TouchableOpacity, Modal, StyleSheet, FlatList , TouchableWithoutFeedback} from 'react-native';
 import { COLORS, FONTSIZE, SPACING } from '../theme/theme';
 
 const sort = [
@@ -7,13 +7,9 @@ const sort = [
   { label: 'High to Low', value: 'highToLow' },
 ];
 
-import { AuthenticatedUserContext } from '../context/AuthenticatedUserContext';
-
 const PriceFilterModal = ({ visibles, onClose, handleFilter }) => {
   const [selectedSortOption, setSelectedSortOption] = useState(null);
   const [sortDropdownVisible, setSortDropdownVisible] = useState(false);
-  const { fetchFilteredProducts } = useContext(AuthenticatedUserContext);
-
   const handleSelect = (item) => {
     setSelectedSortOption(item);
     setSortDropdownVisible(false);
@@ -33,6 +29,11 @@ const PriceFilterModal = ({ visibles, onClose, handleFilter }) => {
 
   const toggleDropdown = () => {
     setSortDropdownVisible(!sortDropdownVisible);
+  };
+
+  const handleOutsidePress = () => {
+    // Close the modal when clicking outside
+    onClose();
   };
 
   const renderDropdown = (options, dropdownVisible) => {
@@ -65,25 +66,30 @@ const PriceFilterModal = ({ visibles, onClose, handleFilter }) => {
 
   return (
     <Modal transparent={true} animationType="slide" visible={visibles} onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
-          <Text style={styles.title}>Sort by Price</Text>
-
-          <Text style={styles.sectionTitle}>Price Sort Order</Text>
-          {renderDropdown(sort, sortDropdownVisible)}
-
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
-              <Text style={styles.buttonText}>Reset</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.applyButton} onPress={handleApply}>
-              <Text style={styles.buttonText}>Apply</Text>
-            </TouchableOpacity>
+      <TouchableWithoutFeedback onPress={handleOutsidePress}>
+        <View style={styles.overlay}>
+        <TouchableWithoutFeedback>
+          <View style={styles.modalContainer}>
+            <Text style={styles.title}>Sort by Price</Text>
+  
+            <Text style={styles.sectionTitle}>Price Sort Order</Text>
+            {renderDropdown(sort, sortDropdownVisible)}
+  
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
+                <Text style={styles.buttonText}>Reset</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.applyButton} onPress={handleApply}>
+                <Text style={styles.buttonText}>Apply</Text>
+              </TouchableOpacity>
+            </View>
           </View>
+          </TouchableWithoutFeedback>
         </View>
-      </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
+  
 };
 
 const styles = StyleSheet.create({
@@ -103,11 +109,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: SPACING.space_10,
+    color: COLORS.primaryGreyHex,
   },
   sectionTitle: {
     fontSize: FONTSIZE.size_16,
     fontWeight: 'bold',
     marginVertical: SPACING.space_10,
+    color: COLORS.primaryBlackHex,
   },
   dropdownContainer: {
     marginBottom: SPACING.space_10,
@@ -118,6 +126,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.space_10,
     backgroundColor: 'rgba(251, 237, 237, 0.5)',
     borderRadius: 8,
+    color: COLORS.primaryBlackHex,
   },
   dropdown: {
     backgroundColor: COLORS.primaryWhiteHex,

@@ -15,6 +15,8 @@ import {
   ToastAndroid,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import SkeletonPlaceholder from 'react-native-skeleton-placeholder';  // Import the skeleton placeholder
+
 import {
   COLORS,
   FONTFAMILY,
@@ -36,7 +38,7 @@ const SearchDetailsScreen = ({navigation, route}: any) => {
   const [searchText, setSearchText] = useState(query || '');
   const [coffeeList, setCoffeeList] = useState([]);
   const ListRef = useRef<FlatList>();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (query) {
@@ -128,10 +130,20 @@ const SearchDetailsScreen = ({navigation, route}: any) => {
           numColumns={2}
           ListEmptyComponent={
             loading ? (
+              <SkeletonPlaceholder style={styles.SkeletonFlatListContainer}>
               <View style={styles.SkeletonContainer}>
-                <SkeletonCard />
-                <SkeletonCard />
+                {[...Array(8)].reduce((rows, _, index, array) => {
+                  if (index % 2 === 0) rows.push(array.slice(index, index + 2));
+                  return rows;
+                }, []).map((row, rowIndex) => (
+                  <View key={rowIndex} style={styles.SkeletonRow}>
+                    {row.map((_, index) => (
+                      <View key={index} style={styles.skeletonThumbnailContainer} />
+                    ))}
+                  </View>
+                ))}
               </View>
+            </SkeletonPlaceholder>
             ) : (
               <View style={styles.EmptyListContainer}>
                 <Text style={styles.CategoryText}>No Data Available</Text>
@@ -255,6 +267,27 @@ const styles = StyleSheet.create({
     fontFamily: FONTFAMILY.poppins_semibold,
     fontSize: FONTSIZE.size_16,
     color: '#555',
+  },
+  SkeletonFlatListContainer: {
+   
+  },
+  SkeletonContainer: {
+    width: '100%',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 10, // Space between rows
+  },
+  SkeletonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between', // Ensures two per row with spacing
+    width: '100%',
+    gap: 10, // Space between skeletons
+  },
+  skeletonThumbnailContainer: {
+    width: '48%', // Ensures two items per row
+    height: 150, // Adjust height as needed
+    backgroundColor: '#E0E0E0', // Light grey placeholder color
+    borderRadius: 8, // Smooth UI
   },
   SkeletonImage: {
     width: '100%',

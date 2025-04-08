@@ -4,11 +4,12 @@ import AppNavigator from './src/navigators/AppNavigator';
 import { AuthenticatedUserProvider } from './src/context/AuthenticatedUserContext';
 import { NotificationProvider } from './src/context/NotificationContext';
 
+
 const App = () => {
   useEffect(() => {
     SplashScreen.hide();
   }, []);
-
+  
   return (
     <AuthenticatedUserProvider>
       <NotificationProvider>
