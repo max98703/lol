@@ -67,9 +67,11 @@ export const AuthenticatedUserProvider = ({ children }) => {
     const { data, error } = await supabase
       .from('products')
       .select(
-        `*,
-        product_items(id,size),
-        product_images(id,image_url,is_primary)`
+        `
+        *,
+        product_items(id,size, sku_number),
+        product_images(id,image_url,is_primary)
+      `
       )
       .eq('id', id)
       .single(); // Fetch only one item
@@ -81,24 +83,28 @@ export const AuthenticatedUserProvider = ({ children }) => {
     return data;
   };
 
-  // Search filter function that can filter by category, brand, and product name
-  const searchProducts = async (searchQuery) => {
-    if (!isConnected) {
-      console.log('No internet connection');
-      return []; // If no connection, return an empty array
-    }
+  const fetchFilteredProducts = async (selectedCategory = null, selectedBrand = null, selectedPriceRange = null) => {
+    setLoading(true);
+
+    let query = supabase.from('products').select('*').eq('is_active', true);
     
-    setLoading(true); // Set loading to true before fetching
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('is_active', true)
-      .ilike('name', `%${searchQuery}%`) // Search by product name
-      .or(`category.ilike.%${searchQuery}%,brand.ilike.%${searchQuery}%`) // Search by category or brand
-      .range(0, 50);
+    if (selectedCategory) {
+      query = query.eq('category', selectedCategory);
+    }
+
+    if (selectedBrand) {
+      query = query.eq('brand', selectedBrand);
+    }
+
+    if (selectedPriceRange) {
+      const [minPrice, maxPrice] = selectedPriceRange.split('-').map(Number);
+      query = query.gte('amount', minPrice).lte('amount', maxPrice);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching products:', error.message);
+      console.error('Error fetching filtered products:', error.message);
       setLoading(false);
       return [];
     } else {
@@ -106,16 +112,8 @@ export const AuthenticatedUserProvider = ({ children }) => {
       return data;
     }
   };
+  const value = useMemo(() => ({ user, setUser, fetchProducts ,loading, fetchProductById, fetchFilteredProducts}), [user]);
 
-  const value = useMemo(() => ({
-    user,
-    setUser,
-    fetchProducts,
-    loading,
-    fetchProductById,
-    isConnected, // Expose network status to children
-    searchProducts
-  }), [user, isConnected]);
 
   console.log('Authenticated User Context:', value);
 
